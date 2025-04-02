@@ -52,7 +52,7 @@ Write-Host @"
 "@
 Write-Host "================================" -ForegroundColor Cyan
 Write-Host "   Инструмент изменения ID устройства Cursor          " -ForegroundColor Green
-Write-Host "  Сделано руками Планетуза " -ForegroundColor Yellow
+Write-Host "   Сделано руками Планетуза " -ForegroundColor Yellow
 Write-Host "================================" -ForegroundColor Cyan
 Write-Host ""
 
