@@ -40,6 +40,7 @@ Write-Host @"
 "@
 Write-Host "$BLUE================================$NC"
 Write-Host "$GREEN   Инструмент изменения ID устройства Cursor          $NC"
+Write-Host "$YELLOW  Сделано прекрасными руками Планетуза $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
@@ -84,7 +85,7 @@ Write-Host "$GREEN[Информация]$NC Проверка процессов 
 
 function Get-ProcessDetails {
     param($processName)
-    Write-Host "$BLUE[Отладка]$NC Получение подробной информации о процессе $processName:"
+    Write-Host "$BLUE[Отладка]$NC Получение подробной информации о процессе $processName" 
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
