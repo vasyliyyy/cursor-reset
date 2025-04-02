@@ -1,6 +1,18 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+function Write-ColorOutput($ForegroundColor) {
+    $fc = $host.UI.RawUI.ForegroundColor
+    $host.UI.RawUI.ForegroundColor = $ForegroundColor
+    if ($args) {
+        Write-Output $args
+    }
+    else {
+        $input | Write-Output
+    }
+    $host.UI.RawUI.ForegroundColor = $fc
+}
+
 $RED = "`e[31m"
 $GREEN = "`e[32m"
 $YELLOW = "`e[33m"
@@ -10,7 +22,7 @@ $NC = "`e[0m"
 $STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
 $BACKUP_DIR = "$env:APPDATA\Cursor\User\globalStorage\backups"
 
-Write-Host "${GREEN}[Информация]${NC} Закрытие Cursor перед началом работы..."
+Write-Host "[Информация] Закрытие Cursor перед началом работы..." -ForegroundColor Green
 Get-Process -Name "cursor" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 2
 
@@ -21,7 +33,7 @@ function Test-Administrator {
 }
 
 if (-not (Test-Administrator)) {
-    Write-Host "${RED}[Ошибка]${NC} Пожалуйста, запустите скрипт от имени администратора"
+    Write-Host "[Ошибка] Пожалуйста, запустите скрипт от имени администратора" -ForegroundColor Red
     Write-Host "Нажмите правой кнопкой мыши на скрипт и выберите 'Запуск от имени администратора'"
     Read-Host "Нажмите Enter для выхода"
     exit 1
@@ -38,10 +50,10 @@ Write-Host @"
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 
 "@
-Write-Host "${BLUE}================================${NC}"
-Write-Host "${GREEN}   Инструмент изменения ID устройства Cursor          ${NC}"
-Write-Host "${YELLOW}  Сделано руками Планетуза ${NC}"
-Write-Host "${BLUE}================================${NC}"
+Write-Host "================================" -ForegroundColor Cyan
+Write-Host "   Инструмент изменения ID устройства Cursor          " -ForegroundColor Green
+Write-Host "  Сделано руками Планетуза " -ForegroundColor Yellow
+Write-Host "================================" -ForegroundColor Cyan
 Write-Host ""
 
 function Get-CursorVersion {
@@ -51,7 +63,7 @@ function Get-CursorVersion {
         if (Test-Path $packagePath) {
             $packageJson = Get-Content $packagePath -Raw | ConvertFrom-Json
             if ($packageJson.version) {
-                Write-Host "${GREEN}[Информация]${NC} Текущая версия Cursor: v$($packageJson.version)"
+                Write-Host "[Информация] Текущая версия Cursor: v$($packageJson.version)" -ForegroundColor Green
                 return $packageJson.version
             }
         }
@@ -60,17 +72,17 @@ function Get-CursorVersion {
         if (Test-Path $altPath) {
             $packageJson = Get-Content $altPath -Raw | ConvertFrom-Json
             if ($packageJson.version) {
-                Write-Host "${GREEN}[Информация]${NC} Текущая версия Cursor: v$($packageJson.version)"
+                Write-Host "[Информация] Текущая версия Cursor: v$($packageJson.version)" -ForegroundColor Green
                 return $packageJson.version
             }
         }
 
-        Write-Host "${YELLOW}[Предупреждение]${NC} Невозможно определить версию Cursor"
-        Write-Host "${YELLOW}[Подсказка]${NC} Убедитесь, что Cursor установлен правильно"
+        Write-Host "[Предупреждение] Невозможно определить версию Cursor" -ForegroundColor Yellow
+        Write-Host "[Подсказка] Убедитесь, что Cursor установлен правильно" -ForegroundColor Yellow
         return $null
     }
     catch {
-        Write-Host "${RED}[Ошибка]${NC} Не удалось получить версию Cursor: $_"
+        Write-Host "[Ошибка] Не удалось получить версию Cursor: $_" -ForegroundColor Red
         return $null
     }
 }
@@ -78,14 +90,14 @@ function Get-CursorVersion {
 $cursorVersion = Get-CursorVersion
 Write-Host ""
 
-Write-Host "${YELLOW}[Важное примечание]${NC} Последняя версия 0.47.x (поддерживается)"
+Write-Host "[Важное примечание] Последняя версия 0.47.x (поддерживается)" -ForegroundColor Yellow
 Write-Host ""
 
-Write-Host "${GREEN}[Информация]${NC} Проверка процессов Cursor..."
+Write-Host "[Информация] Проверка процессов Cursor..." -ForegroundColor Green
 
 function Get-ProcessDetails {
     param($processName)
-    Write-Host "${BLUE}[Отладка]${NC} Получение подробной информации о процессе ${processName}"
+    Write-Host "[Отладка] Получение подробной информации о процессе $processName" -ForegroundColor Blue
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
@@ -99,10 +111,10 @@ function Close-CursorProcess {
     
     $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
     if ($process) {
-        Write-Host "${YELLOW}[Предупреждение]${NC} Обнаружен запущенный процесс ${processName}"
+        Write-Host "[Предупреждение] Обнаружен запущенный процесс $processName" -ForegroundColor Yellow
         Get-ProcessDetails $processName
         
-        Write-Host "${YELLOW}[Предупреждение]${NC} Попытка закрыть ${processName}..."
+        Write-Host "[Предупреждение] Попытка закрыть $processName..." -ForegroundColor Yellow
         Stop-Process -Name $processName -Force
         
         $retryCount = 0
@@ -112,16 +124,16 @@ function Close-CursorProcess {
             
             $retryCount++
             if ($retryCount -ge $MAX_RETRIES) {
-                Write-Host "${RED}[Ошибка]${NC} Не удалось закрыть ${processName} после ${MAX_RETRIES} попыток"
+                Write-Host "[Ошибка] Не удалось закрыть $processName после $MAX_RETRIES попыток" -ForegroundColor Red
                 Get-ProcessDetails $processName
-                Write-Host "${RED}[Ошибка]${NC} Пожалуйста, закройте процесс вручную и попробуйте снова"
+                Write-Host "[Ошибка] Пожалуйста, закройте процесс вручную и попробуйте снова" -ForegroundColor Red
                 Read-Host "Нажмите Enter для выхода"
                 exit 1
             }
-            Write-Host "${YELLOW}[Предупреждение]${NC} Ожидание закрытия процесса, попытка ${retryCount}/${MAX_RETRIES}..."
+            Write-Host "[Предупреждение] Ожидание закрытия процесса, попытка $retryCount/$MAX_RETRIES..." -ForegroundColor Yellow
             Start-Sleep -Seconds $WAIT_TIME
         }
-        Write-Host "${GREEN}[Информация]${NC} ${processName} успешно закрыт"
+        Write-Host "[Информация] $processName успешно закрыт" -ForegroundColor Green
     }
 }
 
@@ -133,12 +145,12 @@ if (-not (Test-Path $BACKUP_DIR)) {
 }
 
 if (Test-Path $STORAGE_FILE) {
-    Write-Host "$GREEN[Информация]$NC Создание резервной копии конфигурационного файла..."
+    Write-Host "[Информация] Создание резервной копии конфигурационного файла..." -ForegroundColor Green
     $backupName = "storage.json.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     Copy-Item $STORAGE_FILE "$BACKUP_DIR\$backupName"
 }
 
-Write-Host "$GREEN[Информация]$NC Генерация нового ID..."
+Write-Host "[Информация] Генерация нового ID..." -ForegroundColor Green
 
 function Get-RandomHex {
     param (
@@ -254,8 +266,8 @@ Write-Host "$GREEN[Информация]$NC Обновление конфигу�
 
 try {
     if (-not (Test-Path $STORAGE_FILE)) {
-        Write-Host "$RED[Ошибка]$NC Конфигурационный файл не найден: $STORAGE_FILE"
-        Write-Host "$YELLOW[Подсказка]$NC Пожалуйста, сначала установите и запустите Cursor, затем используйте этот скрипт"
+        Write-Host "[Ошибка] Конфигурационный файл не найден: $STORAGE_FILE" -ForegroundColor Red
+        Write-Host "[Подсказка] Пожалуйста, сначала установите и запустите Cursor, затем используйте этот скрипт" -ForegroundColor Yellow
         Read-Host "Нажмите Enter для выхода"
         exit 1
     }
@@ -324,60 +336,60 @@ try {
     Write-Host "${YELLOW}  Сделано руками Планетуза  ${NC}"
     Write-Host "${GREEN}================================${NC}"
     Write-Host ""
-    Write-Host "${GREEN}[Информация]${NC} Пожалуйста, перезапустите Cursor для применения новой конфигурации"
+    Write-Host "${GREEN}[Информация]${NC} Пожалуйста, перезапустите Cursor для применения новой конфигурации" -ForegroundColor Green
     Write-Host ""
 
     Write-Host ""
-    Write-Host "${YELLOW}[Вопрос]${NC} Хотите отключить автоматическое обновление Cursor?"
+    Write-Host "${YELLOW}[Вопрос]${NC} Хотите отключить автоматическое обновление Cursor?" -ForegroundColor Yellow
     Write-Host "0) Нет - оставить настройки по умолчанию (нажмите Enter)"
     Write-Host "1) Да - отключить автоматическое обновление"
     $choice = Read-Host "Выберите опцию (0)"
 
     if ($choice -eq "1") {
         Write-Host ""
-        Write-Host "$GREEN[Информация]$NC Обработка автоматического обновления..."
+        Write-Host "$GREEN[Информация]$NC Обработка автоматического обновления..." -ForegroundColor Green
         $updaterPath = "$env:LOCALAPPDATA\cursor-updater"
 
         function Show-ManualGuide {
             Write-Host ""
-            Write-Host "$YELLOW[Предупреждение]$NC Автоматическая настройка не удалась, попробуйте выполнить вручную:"
-            Write-Host "$YELLOWШаги для отключения обновлений вручную:$NC"
+            Write-Host "[Предупреждение] Автоматическая настройка не удалась, попробуйте выполнить вручную:" -ForegroundColor Yellow
+            Write-Host "Шаги для отключения обновлений вручную:" -ForegroundColor Yellow
             Write-Host "1. Откройте PowerShell от имени администратора"
             Write-Host "2. Скопируйте и вставьте следующие команды:"
-            Write-Host "$BLUEКоманда 1 - Удалить существующую директорию (если есть):$NC"
+            Write-Host "Команда 1 - Удалить существующую директорию (если есть):" -ForegroundColor Cyan
             Write-Host "Remove-Item -Path `"$updaterPath`" -Force -Recurse -ErrorAction SilentlyContinue"
             Write-Host ""
-            Write-Host "$BLUEКоманда 2 - Создать блокирующий файл:$NC"
+            Write-Host "Команда 2 - Создать блокирующий файл:" -ForegroundColor Cyan
             Write-Host "New-Item -Path `"$updaterPath`" -ItemType File -Force | Out-Null"
             Write-Host ""
-            Write-Host "$BLUEКоманда 3 - Установить атрибут только для чтения:$NC"
+            Write-Host "Команда 3 - Установить атрибут только для чтения:" -ForegroundColor Cyan
             Write-Host "Set-ItemProperty -Path `"$updaterPath`" -Name IsReadOnly -Value `$true"
             Write-Host ""
-            Write-Host "$BLUEКоманда 4 - Установить разрешения (опционально):$NC"
+            Write-Host "Команда 4 - Установить разрешения (опционально):" -ForegroundColor Cyan
             Write-Host "icacls `"$updaterPath`" /inheritance:r /grant:r `"$($env:USERNAME):(R)`""
             Write-Host ""
-            Write-Host "$YELLOWМетод проверки:$NC"
+            Write-Host "Метод проверки:" -ForegroundColor Yellow
             Write-Host "1. Выполните команду: Get-ItemProperty `"$updaterPath`""
             Write-Host "2. Убедитесь, что IsReadOnly имеет значение True"
             Write-Host "3. Выполните команду: icacls `"$updaterPath`""
             Write-Host "4. Убедитесь, что есть только права на чтение"
             Write-Host ""
-            Write-Host "$YELLOW[Подсказка]$NC После завершения перезапустите Cursor"
+            Write-Host "[Подсказка] После завершения перезапустите Cursor" -ForegroundColor Yellow
         }
 
         try {
             if (Test-Path $updaterPath) {
                 if ((Get-Item $updaterPath) -is [System.IO.FileInfo]) {
-                    Write-Host "$GREEN[Информация]$NC Файл блокировки обновлений уже создан"
+                    Write-Host "$GREEN[Информация]$NC Файл блокировки обновлений уже создан" -ForegroundColor Green
                     return
                 }
                 else {
                     try {
                         Remove-Item -Path $updaterPath -Force -Recurse -ErrorAction Stop
-                        Write-Host "$GREEN[Информация]$NC Директория cursor-updater успешно удалена"
+                        Write-Host "$GREEN[Информация]$NC Директория cursor-updater успешно удалена" -ForegroundColor Green
                     }
                     catch {
-                        Write-Host "$RED[Ошибка]$NC Не удалось удалить директорию cursor-updater"
+                        Write-Host "$RED[Ошибка]$NC Не удалось удалить директорию cursor-updater" -ForegroundColor Red
                         Show-ManualGuide
                         return
                     }
@@ -386,10 +398,10 @@ try {
 
             try {
                 New-Item -Path $updaterPath -ItemType File -Force -ErrorAction Stop | Out-Null
-                Write-Host "$GREEN[Информация]$NC Файл блокировки успешно создан"
+                Write-Host "$GREEN[Информация]$NC Файл блокировки успешно создан" -ForegroundColor Green
             }
             catch {
-                Write-Host "$RED[Ошибка]$NC Не удалось создать файл блокировки"
+                Write-Host "$RED[Ошибка]$NC Не удалось создать файл блокировки" -ForegroundColor Red
                 Show-ManualGuide
                 return
             }
@@ -402,10 +414,10 @@ try {
                     throw "Команда icacls не выполнена"
                 }
                 
-                Write-Host "$GREEN[Информация]$NC Разрешения файла успешно установлены"
+                Write-Host "$GREEN[Информация]$NC Разрешения файла успешно установлены" -ForegroundColor Green
             }
             catch {
-                Write-Host "$RED[Ошибка]$NC Не удалось установить разрешения файла"
+                Write-Host "$RED[Ошибка]$NC Не удалось установить разрешения файла" -ForegroundColor Red
                 Show-ManualGuide
                 return
             }
@@ -413,42 +425,42 @@ try {
             try {
                 $fileInfo = Get-ItemProperty $updaterPath
                 if (-not $fileInfo.IsReadOnly) {
-                    Write-Host "$RED[Ошибка]$NC Проверка не удалась: настройки разрешений могли не примениться"
+                    Write-Host "$RED[Ошибка]$NC Проверка не удалась: настройки разрешений могли не примениться" -ForegroundColor Red
                     Show-ManualGuide
                     return
                 }
             }
             catch {
-                Write-Host "$RED[Ошибка]$NC Проверка настроек не удалась"
+                Write-Host "$RED[Ошибка]$NC Проверка настроек не удалась" -ForegroundColor Red
                 Show-ManualGuide
                 return
             }
 
-            Write-Host "$GREEN[Информация]$NC Автоматическое обновление успешно отключено"
+            Write-Host "$GREEN[Информация]$NC Автоматическое обновление успешно отключено" -ForegroundColor Green
         }
         catch {
-            Write-Host "$RED[Ошибка]$NC Произошла неизвестная ошибка: $_"
+            Write-Host "$RED[Ошибка]$NC Произошла неизвестная ошибка: $_" -ForegroundColor Red
             Show-ManualGuide
         }
     }
     else {
-        Write-Host "$GREEN[Информация]$NC Сохранены настройки по умолчанию"
+        Write-Host "$GREEN[Информация]$NC Сохранены настройки по умолчанию" -ForegroundColor Green
     }
 
     Update-MachineGuid
 
 } catch {
-    Write-Host "$RED[Ошибка]$NC Основная операция не удалась: $_"
-    Write-Host "$YELLOW[Попытка]$NC Использование альтернативного метода..."
+    Write-Host "$RED[Ошибка]$NC Основная операция не удалась: $_" -ForegroundColor Red
+    Write-Host "$YELLOW[Попытка]$NC Использование альтернативного метода..." -ForegroundColor Yellow
     
     try {
         $tempFile = [System.IO.Path]::GetTempFileName()
         $config | ConvertTo-Json | Set-Content -Path $tempFile -Encoding UTF8
         Copy-Item -Path $tempFile -Destination $STORAGE_FILE -Force
         Remove-Item -Path $tempFile
-        Write-Host "$GREEN[Информация]$NC Конфигурация успешно записана альтернативным методом"
+        Write-Host "$GREEN[Информация]$NC Конфигурация успешно записана альтернативным методом" -ForegroundColor Green
     } catch {
-        Write-Host "$RED[Ошибка]$NC Все попытки не удались"
+        Write-Host "$RED[Ошибка]$NC Все попытки не удались" -ForegroundColor Red
         Write-Host "Подробности ошибки: $_"
         Write-Host "Целевой файл: $STORAGE_FILE"
         Write-Host "Убедитесь, что у вас достаточно прав для доступа к файлу"
@@ -476,7 +488,7 @@ function Write-ConfigFile {
             $utf8NoBom
         )
         
-        Write-Host "$GREEN[Информация]$NC Конфигурационный файл успешно записан (UTF8 без BOM)"
+        Write-Host "$GREEN[Информация]$NC Конфигурационный файл успешно записан (UTF8 без BOM)" -ForegroundColor Green
     }
     catch {
         throw "Не удалось записать конфигурационный файл: $_"
@@ -486,7 +498,7 @@ function Write-ConfigFile {
 $cursorVersion = Get-CursorVersion
 Write-Host ""
 if ($cursorVersion) {
-    Write-Host "$GREEN[Информация]$NC Обнаружена версия Cursor: $cursorVersion, продолжаем..."
+    Write-Host "$GREEN[Информация]$NC Обнаружена версия Cursor: $cursorVersion, продолжаем..." -ForegroundColor Green
 } else {
-    Write-Host "$YELLOW[Предупреждение]$NC Не удалось определить версию, продолжаем..."
+    Write-Host "$YELLOW[Предупреждение]$NC Не удалось определить версию, продолжаем..." -ForegroundColor Yellow
 } 
