@@ -185,7 +185,7 @@ $MACHINE_ID = "$prefixHex$randomPart"
 $SQM_ID = "{$([System.Guid]::NewGuid().ToString().ToUpper())}"
 
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "$RED[Ошибка]$NC Пожалуйста, запустите скрипт от имени администратора"
+    Write-Host "[Ошибка] Пожалуйста, запустите скрипт от имени администратора" -ForegroundColor Red
     Start-Process powershell "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
@@ -194,9 +194,9 @@ function Update-MachineGuid {
     try {
         $registryPath = "HKLM:\SOFTWARE\Microsoft\Cryptography"
         if (-not (Test-Path $registryPath)) {
-            Write-Host "$YELLOW[Предупреждение]$NC Путь реестра не существует: $registryPath, создание..."
+            Write-Host "[Предупреждение] Путь реестра не существует: $registryPath, создание..." -ForegroundColor Yellow
             New-Item -Path $registryPath -Force | Out-Null
-            Write-Host "$GREEN[Информация]$NC Путь реестра успешно создан"
+            Write-Host "[Информация] Путь реестра успешно создан" -ForegroundColor Green
         }
 
         $originalGuid = ""
@@ -204,14 +204,14 @@ function Update-MachineGuid {
             $currentGuid = Get-ItemProperty -Path $registryPath -Name MachineGuid -ErrorAction SilentlyContinue
             if ($currentGuid) {
                 $originalGuid = $currentGuid.MachineGuid
-                Write-Host "$GREEN[Информация]$NC Текущее значение реестра:"
+                Write-Host "[Информация] Текущее значение реестра:" -ForegroundColor Green
                 Write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography" 
                 Write-Host "    MachineGuid    REG_SZ    $originalGuid"
             } else {
-                Write-Host "$YELLOW[Предупреждение]$NC Значение MachineGuid не существует, будет создано новое"
+                Write-Host "[Предупреждение] Значение MachineGuid не существует, будет создано новое" -ForegroundColor Yellow
             }
         } catch {
-            Write-Host "$YELLOW[Предупреждение]$NC Не удалось получить MachineGuid: $($_.Exception.Message)"
+            Write-Host "[Предупреждение] Не удалось получить MachineGuid: $($_.Exception.Message)" -ForegroundColor Yellow
         }
 
         if (-not (Test-Path $BACKUP_DIR)) {
@@ -223,9 +223,9 @@ function Update-MachineGuid {
             $backupResult = Start-Process "reg.exe" -ArgumentList "export", "`"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography`"", "`"$backupFile`"" -NoNewWindow -Wait -PassThru
             
             if ($backupResult.ExitCode -eq 0) {
-                Write-Host "$GREEN[Информация]$NC Резервная копия реестра создана: $backupFile"
+                Write-Host "[Информация] Резервная копия реестра создана: $backupFile" -ForegroundColor Green
             } else {
-                Write-Host "$YELLOW[Предупреждение]$NC Не удалось создать резервную копию, продолжаем..."
+                Write-Host "[Предупреждение] Не удалось создать резервную копию, продолжаем..." -ForegroundColor Yellow
             }
         }
 
@@ -238,31 +238,31 @@ function Update-MachineGuid {
             throw "Ошибка проверки реестра: обновленное значение ($verifyGuid) не соответствует ожидаемому ($newGuid)"
         }
 
-        Write-Host "$GREEN[Информация]$NC Реестр успешно обновлен:"
+        Write-Host "[Информация] Реестр успешно обновлен:" -ForegroundColor Green
         Write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography"
         Write-Host "    MachineGuid    REG_SZ    $newGuid"
         return $true
     }
     catch {
-        Write-Host "$RED[Ошибка]$NC Операция с реестром не удалась: $($_.Exception.Message)"
+        Write-Host "[Ошибка] Операция с реестром не удалась: $($_.Exception.Message)" -ForegroundColor Red
         
         if (($backupFile -ne $null) -and (Test-Path $backupFile)) {
-            Write-Host "$YELLOW[Восстановление]$NC Восстановление из резервной копии..."
+            Write-Host "[Восстановление] Восстановление из резервной копии..." -ForegroundColor Yellow
             $restoreResult = Start-Process "reg.exe" -ArgumentList "import", "`"$backupFile`"" -NoNewWindow -Wait -PassThru
             
             if ($restoreResult.ExitCode -eq 0) {
-                Write-Host "$GREEN[Восстановление успешно]$NC Оригинальное значение реестра восстановлено"
+                Write-Host "[Восстановление успешно] Оригинальное значение реестра восстановлено" -ForegroundColor Green
             } else {
-                Write-Host "$RED[Ошибка]$NC Восстановление не удалось, импортируйте резервную копию вручную: $backupFile"
+                Write-Host "[Ошибка] Восстановление не удалось, импортируйте резервную копию вручную: $backupFile" -ForegroundColor Red
             }
         } else {
-            Write-Host "$YELLOW[Предупреждение]$NC Резервная копия не найдена или не создана, автоматическое восстановление невозможно"
+            Write-Host "[Предупреждение] Резервная копия не найдена или не создана, автоматическое восстановление невозможно" -ForegroundColor Yellow
         }
         return $false
     }
 }
 
-Write-Host "$GREEN[Информация]$NC Обновление конфигурации..."
+Write-Host "[Информация] Обновление конфигурации..." -ForegroundColor Green
 
 try {
     if (-not (Test-Path $STORAGE_FILE)) {
@@ -309,15 +309,15 @@ try {
     Update-MachineGuid
 
     Write-Host ""
-    Write-Host "$GREEN[Информация]$NC Конфигурация обновлена:"
-    Write-Host "$BLUE[Отладка]$NC machineId: $MACHINE_ID"
-    Write-Host "$BLUE[Отладка]$NC macMachineId: $MAC_MACHINE_ID"
-    Write-Host "$BLUE[Отладка]$NC devDeviceId: $UUID"
-    Write-Host "$BLUE[Отладка]$NC sqmId: $SQM_ID"
+    Write-Host "[Информация] Конфигурация обновлена:" -ForegroundColor Green
+    Write-Host "[Отладка] machineId: $MACHINE_ID" -ForegroundColor Cyan
+    Write-Host "[Отладка] macMachineId: $MAC_MACHINE_ID" -ForegroundColor Cyan
+    Write-Host "[Отладка] devDeviceId: $UUID" -ForegroundColor Cyan
+    Write-Host "[Отладка] sqmId: $SQM_ID" -ForegroundColor Cyan
 
     Write-Host ""
-    Write-Host "$GREEN[Информация]$NC Структура файлов:"
-    Write-Host "$BLUE$env:APPDATA\Cursor\User$NC"
+    Write-Host "[Информация] Структура файлов:" -ForegroundColor Green
+    Write-Host "$env:APPDATA\Cursor\User" -ForegroundColor Cyan
     Write-Host "├── globalStorage"
     Write-Host "│   ├── storage.json (изменен)"
     Write-Host "│   └── backups"
@@ -332,15 +332,15 @@ try {
     }
 
     Write-Host ""
-    Write-Host "${GREEN}================================${NC}"
-    Write-Host "${YELLOW}  Сделано руками Планетуза  ${NC}"
-    Write-Host "${GREEN}================================${NC}"
+    Write-Host "================================" -ForegroundColor Green
+    Write-Host "  Сделано прекрасными руками Планетуза  " -ForegroundColor Yellow
+    Write-Host "================================" -ForegroundColor Green
     Write-Host ""
-    Write-Host "${GREEN}[Информация]${NC} Пожалуйста, перезапустите Cursor для применения новой конфигурации" -ForegroundColor Green
+    Write-Host "[Информация] Пожалуйста, перезапустите Cursor для применения новой конфигурации" -ForegroundColor Green
     Write-Host ""
 
     Write-Host ""
-    Write-Host "${YELLOW}[Вопрос]${NC} Хотите отключить автоматическое обновление Cursor?" -ForegroundColor Yellow
+    Write-Host "[Вопрос] Хотите отключить автоматическое обновление Cursor?" -ForegroundColor Yellow
     Write-Host "0) Нет - оставить настройки по умолчанию (нажмите Enter)"
     Write-Host "1) Да - отключить автоматическое обновление"
     $choice = Read-Host "Выберите опцию (0)"
