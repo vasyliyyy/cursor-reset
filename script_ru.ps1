@@ -10,7 +10,7 @@ $NC = "`e[0m"
 $STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
 $BACKUP_DIR = "$env:APPDATA\Cursor\User\globalStorage\backups"
 
-Write-Host "$GREEN[Информация]$NC Закрытие Cursor перед началом работы..."
+Write-Host "${GREEN}[Информация]${NC} Закрытие Cursor перед началом работы..."
 Get-Process -Name "cursor" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 2
 
@@ -21,7 +21,7 @@ function Test-Administrator {
 }
 
 if (-not (Test-Administrator)) {
-    Write-Host "$RED[Ошибка]$NC Пожалуйста, запустите скрипт от имени администратора"
+    Write-Host "${RED}[Ошибка]${NC} Пожалуйста, запустите скрипт от имени администратора"
     Write-Host "Нажмите правой кнопкой мыши на скрипт и выберите 'Запуск от имени администратора'"
     Read-Host "Нажмите Enter для выхода"
     exit 1
@@ -38,10 +38,10 @@ Write-Host @"
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 
 "@
-Write-Host "$BLUE================================$NC"
-Write-Host "$GREEN   Инструмент изменения ID устройства Cursor          $NC"
-Write-Host "$YELLOW  Сделано прекрасными руками Планетуза $NC"
-Write-Host "$BLUE================================$NC"
+Write-Host "${BLUE}================================${NC}"
+Write-Host "${GREEN}   Инструмент изменения ID устройства Cursor          ${NC}"
+Write-Host "${YELLOW}  Сделано руками Планетуза ${NC}"
+Write-Host "${BLUE}================================${NC}"
 Write-Host ""
 
 function Get-CursorVersion {
@@ -51,7 +51,7 @@ function Get-CursorVersion {
         if (Test-Path $packagePath) {
             $packageJson = Get-Content $packagePath -Raw | ConvertFrom-Json
             if ($packageJson.version) {
-                Write-Host "$GREEN[Информация]$NC Текущая версия Cursor: v$($packageJson.version)"
+                Write-Host "${GREEN}[Информация]${NC} Текущая версия Cursor: v$($packageJson.version)"
                 return $packageJson.version
             }
         }
@@ -60,17 +60,17 @@ function Get-CursorVersion {
         if (Test-Path $altPath) {
             $packageJson = Get-Content $altPath -Raw | ConvertFrom-Json
             if ($packageJson.version) {
-                Write-Host "$GREEN[Информация]$NC Текущая версия Cursor: v$($packageJson.version)"
+                Write-Host "${GREEN}[Информация]${NC} Текущая версия Cursor: v$($packageJson.version)"
                 return $packageJson.version
             }
         }
 
-        Write-Host "$YELLOW[Предупреждение]$NC Невозможно определить версию Cursor"
-        Write-Host "$YELLOW[Подсказка]$NC Убедитесь, что Cursor установлен правильно"
+        Write-Host "${YELLOW}[Предупреждение]${NC} Невозможно определить версию Cursor"
+        Write-Host "${YELLOW}[Подсказка]${NC} Убедитесь, что Cursor установлен правильно"
         return $null
     }
     catch {
-        Write-Host "$RED[Ошибка]$NC Не удалось получить версию Cursor: $_"
+        Write-Host "${RED}[Ошибка]${NC} Не удалось получить версию Cursor: $_"
         return $null
     }
 }
@@ -78,14 +78,14 @@ function Get-CursorVersion {
 $cursorVersion = Get-CursorVersion
 Write-Host ""
 
-Write-Host "$YELLOW[Важное примечание]$NC Последняя версия 0.47.x (поддерживается)"
+Write-Host "${YELLOW}[Важное примечание]${NC} Последняя версия 0.47.x (поддерживается)"
 Write-Host ""
 
-Write-Host "$GREEN[Информация]$NC Проверка процессов Cursor..."
+Write-Host "${GREEN}[Информация]${NC} Проверка процессов Cursor..."
 
 function Get-ProcessDetails {
     param($processName)
-    Write-Host "$BLUE[Отладка]$NC Получение подробной информации о процессе $processName" 
+    Write-Host "${BLUE}[Отладка]${NC} Получение подробной информации о процессе ${processName}"
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
@@ -99,10 +99,10 @@ function Close-CursorProcess {
     
     $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
     if ($process) {
-        Write-Host "$YELLOW[Предупреждение]$NC Обнаружен запущенный процесс $processName"
+        Write-Host "${YELLOW}[Предупреждение]${NC} Обнаружен запущенный процесс ${processName}"
         Get-ProcessDetails $processName
         
-        Write-Host "$YELLOW[Предупреждение]$NC Попытка закрыть $processName..."
+        Write-Host "${YELLOW}[Предупреждение]${NC} Попытка закрыть ${processName}..."
         Stop-Process -Name $processName -Force
         
         $retryCount = 0
@@ -112,16 +112,16 @@ function Close-CursorProcess {
             
             $retryCount++
             if ($retryCount -ge $MAX_RETRIES) {
-                Write-Host "$RED[Ошибка]$NC Не удалось закрыть $processName после $MAX_RETRIES попыток"
+                Write-Host "${RED}[Ошибка]${NC} Не удалось закрыть ${processName} после ${MAX_RETRIES} попыток"
                 Get-ProcessDetails $processName
-                Write-Host "$RED[Ошибка]$NC Пожалуйста, закройте процесс вручную и попробуйте снова"
+                Write-Host "${RED}[Ошибка]${NC} Пожалуйста, закройте процесс вручную и попробуйте снова"
                 Read-Host "Нажмите Enter для выхода"
                 exit 1
             }
-            Write-Host "$YELLOW[Предупреждение]$NC Ожидание закрытия процесса, попытка $retryCount/$MAX_RETRIES..."
+            Write-Host "${YELLOW}[Предупреждение]${NC} Ожидание закрытия процесса, попытка ${retryCount}/${MAX_RETRIES}..."
             Start-Sleep -Seconds $WAIT_TIME
         }
-        Write-Host "$GREEN[Информация]$NC $processName успешно закрыт"
+        Write-Host "${GREEN}[Информация]${NC} ${processName} успешно закрыт"
     }
 }
 
@@ -320,15 +320,15 @@ try {
     }
 
     Write-Host ""
-    Write-Host "$GREEN================================$NC"
-    Write-Host "$YELLOW  Подпишитесь на канал 【煎饼果子卷AI】 для обсуждения приемов работы с Cursor и знаний об AI (скрипт бесплатный, подписывайтесь на канал для вступления в группу)  $NC"
-    Write-Host "$GREEN================================$NC"
+    Write-Host "${GREEN}================================${NC}"
+    Write-Host "${YELLOW}  Сделано руками Планетуза  ${NC}"
+    Write-Host "${GREEN}================================${NC}"
     Write-Host ""
-    Write-Host "$GREEN[Информация]$NC Пожалуйста, перезапустите Cursor для применения новой конфигурации"
+    Write-Host "${GREEN}[Информация]${NC} Пожалуйста, перезапустите Cursor для применения новой конфигурации"
     Write-Host ""
 
     Write-Host ""
-    Write-Host "$YELLOW[Вопрос]$NC Хотите отключить автоматическое обновление Cursor?"
+    Write-Host "${YELLOW}[Вопрос]${NC} Хотите отключить автоматическое обновление Cursor?"
     Write-Host "0) Нет - оставить настройки по умолчанию (нажмите Enter)"
     Write-Host "1) Да - отключить автоматическое обновление"
     $choice = Read-Host "Выберите опцию (0)"
@@ -354,7 +354,7 @@ try {
             Write-Host "Set-ItemProperty -Path `"$updaterPath`" -Name IsReadOnly -Value `$true"
             Write-Host ""
             Write-Host "$BLUEКоманда 4 - Установить разрешения (опционально):$NC"
-            Write-Host "icacls `"$updaterPath`" /inheritance:r /grant:r `"`$($env:USERNAME):(R)`""
+            Write-Host "icacls `"$updaterPath`" /inheritance:r /grant:r `"$($env:USERNAME):(R)`""
             Write-Host ""
             Write-Host "$YELLOWМетод проверки:$NC"
             Write-Host "1. Выполните команду: Get-ItemProperty `"$updaterPath`""
